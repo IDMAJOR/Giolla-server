@@ -60,10 +60,8 @@ const signIn = async (req, res, next) => {
 
     res
       .status(200)
-      .cookie("authToken", token, {
-        httpOnly: true, // Allow access from JavaScript if needed
-        secure: true, // Use `true` in production with HTTPS
-        sameSite: "none", // Adjust based on your use case
+      .cookie("user_token", token, {
+        httpOnly: true,
       })
       .json(rest);
 
@@ -123,4 +121,18 @@ const googleAuth = async (req, res, next) => {
   }
 };
 
-module.exports = { signUp, signIn, googleAuth };
+const setCookies = async (req, res) => {
+  res.cookie("authToken", "12345", {
+    httpOnly: true, // Prevents access from JavaScript
+    secure: true, // Only set cookie over HTTPS
+    sameSite: "None", // For cross-site cookies
+    expires: new Date(Date.now() + 3600000), // 1 hour expiry
+  });
+  res.status(200).send({ message: "This should send a cookie" });
+};
+
+const getCookies = async (req, res) => {
+  console.log(req.headers.cookie);
+};
+
+module.exports = { signUp, signIn, googleAuth, setCookies, getCookies };

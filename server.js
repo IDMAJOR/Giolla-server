@@ -33,6 +33,11 @@ const DBConnection = async () => {
 
 app.use("/api/auth", authRoute);
 
+app.get("/cookie", (req, res) => {
+  res.cookie("new", "world", { maxAge: 60000 });
+  res.status(200).send({ message: "This should send a cookie" });
+});
+
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || "Internal Server Error";

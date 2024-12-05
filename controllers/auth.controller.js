@@ -58,12 +58,7 @@ const signIn = async (req, res, next) => {
 
     const { password: pass, ...rest } = validUser._doc;
 
-    res
-      .status(200)
-      .cookie("user_token", token, {
-        httpOnly: true,
-      })
-      .json(rest);
+    res.status(200).json({ rest, token });
 
     // console.log("user_token", token);
   } catch (error) {
@@ -121,18 +116,48 @@ const googleAuth = async (req, res, next) => {
   }
 };
 
-const setCookies = async (req, res) => {
-  res.cookie("authToken", "12345", {
-    httpOnly: true, // Prevents access from JavaScript
-    secure: true, // Only set cookie over HTTPS
-    sameSite: "None", // For cross-site cookies
-    expires: new Date(Date.now() + 3600000), // 1 hour expiry
-  });
-  res.status(200).send({ message: "This should send a cookie" });
+const verifyUser = async (req, res, next) => {
+  try {
+    // Extract the token from headers or parameters
+    const userToken =
+      req.params.userToken || req.headers.authorization?.split(" ")[1];
+
+    if (!userToken) {
+      return res.status(400).json({ message: "Token not provided" });
+    }
+
+    // Verify the JWT token
+    jwt.verify(userToken, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        return res.status(401).json({ message: "Invalid or expired token" });
+      }
+
+      // Extract user ID from the token payload
+      const userId = decoded.id;
+
+      // Find the user in the database
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Attach user data to the request (optional, useful for middleware chaining)
+      req.user = user;
+
+      const { password: pass, ...rest } = user._doc;
+
+      // Respond with user data
+      res.status(200).json(rest);
+    });
+  } catch (error) {
+    console.error("Error verifying user:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
-const getCookies = async (req, res) => {
-  console.log(req.headers.cookie);
-};
+// const verifyCookie = async (req, res) => {
+//   console.log(req.cookies.user_token);
+//   res.end();
+// };
 
-module.exports = { signUp, signIn, googleAuth, setCookies, getCookies };
+module.exports = { signUp, signIn, googleAuth, verifyUser };

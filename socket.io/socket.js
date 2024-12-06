@@ -11,8 +11,16 @@ const initializeSocket = (server) => {
   io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
-    socket.on("message", (data) => {
+    socket.on("message", (data, callback) => {
       console.log("Message received:", data);
+
+      if (!data.text) {
+        return callback({ error: "Message text is required." });
+      }
+      // Process the message...
+      callback({ success: true });
+
+      console.log(data.userId);
       io.emit("message", data);
     });
 

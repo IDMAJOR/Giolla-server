@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const authRoute = require("./routes/auth.route");
+const userRoute = require("./routes/user.route");
 const http = require("http");
 const initializeSocket = require("./socket.io/socket");
 require("dotenv").config();
@@ -17,7 +18,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://127.0.0.1:5501",
+    origin: "*",
     credentials: true,
   })
 );
@@ -32,6 +33,7 @@ const DBConnection = async () => {
 };
 
 app.use("/api/auth", authRoute);
+app.use("/api/user", userRoute);
 
 app.get("/cookie", (req, res) => {
   res.cookie("new", "world", { maxAge: 60000 });
